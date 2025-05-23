@@ -39,7 +39,7 @@ class Product(models.Model):
             super().save(*args, **kwargs)  # Save to generate self.id
 
         if not self.sku:
-            self.sku = f"{self.category.code}-{str(self.id).zfill(4)}"
+            self.sku = f"{self.category.code}{str(self.id).zfill(4)}"
             super().save(update_fields=["sku"])
 
     def __str__(self):
