@@ -1,27 +1,23 @@
 from django.db import models
-import uuid
-from Inventory.models import Product
-
-
-# Create your models here.
-class SalesOrder(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    customer_name = models.CharField(max_length=100)
-    customer_number = models.CharField(max_length=15, blank=True, null=True)
-    total_price = models.DecimalField(max_digits=10, decimal_places=2)
-    order_date = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"Order {self.id} by {self.customer_name}"
-
 
 class SalesItem(models.Model):
-    order = models.ForeignKey(
-        SalesOrder, on_delete=models.CASCADE, related_name="items"
-    )
-    product = models.ForeignKey(Product, to_field='sku', on_delete=models.PROTECT)
-    quantity = models.PositiveIntegerField()
+    name = models.CharField(max_length=255)
     price = models.DecimalField(max_digits=10, decimal_places=2)
+    quantity = models.PositiveIntegerField()
 
     def __str__(self):
-        return f"{self.product}: (x{self.quantity})"
+        return self.name
+
+
+class SalesOrder(models.Model):
+    items = models.ManyToManyField(SalesItem)
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def calculate_total(self):
+        total = sum(item.price * item.quantity for item in self.items.all())
+        self.total_amount = total
+        self.save()
+
+    def __str__(self):
+        return f"Sales Order #{self.id} - Total: {self.total_amount}"
